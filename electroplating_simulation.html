@@ -130,7 +130,7 @@
       <div class="vrow"><input type="range" id="cv" min="0" max="6" step="0.5" value="3" oninput="cVolt()">
         <span class="vval" id="cvd">3.0 V</span></div></div>
     <div class="cg">
-      <div class="speed-row"><span class="speed-label">Sim speed</span><input type="range" id="c-speed" min="0.5" max="20" step="0.5" value="3" oninput="document.getElementById('c-spd').textContent=this.value+'×'"><span class="speed-val" id="c-spd">3×</span></div>
+      <div class="speed-row"><span class="speed-label">Sim speed</span><input type="range" id="c-speed" min="0.5" max="100" step="0.5" value="3" oninput="document.getElementById('c-spd').textContent=this.value+'×'"><span class="speed-val" id="c-spd">3×</span></div>
     </div>
     <button class="run-btn" id="c-run" onclick="toggleRun('c')">▶ Run</button>
     <button class="reset-btn" onclick="doReset('c')">↺ Reset</button>
@@ -175,7 +175,7 @@
       <div class="vrow"><input type="range" id="gv" min="0" max="6" step="0.5" value="2" oninput="gVolt()">
         <span class="vval" id="gvd">2.0 V</span></div></div>
     <div class="cg">
-      <div class="speed-row"><span class="speed-label">Sim speed</span><input type="range" id="g-speed" min="0.5" max="20" step="0.5" value="3" oninput="document.getElementById('g-spd').textContent=this.value+'×'"><span class="speed-val" id="g-spd">3×</span></div>
+      <div class="speed-row"><span class="speed-label">Sim speed</span><input type="range" id="g-speed" min="0.5" max="100" step="0.5" value="3" oninput="document.getElementById('g-spd').textContent=this.value+'×'"><span class="speed-val" id="g-spd">3×</span></div>
     </div>
     <button class="run-btn" id="g-run" onclick="toggleRun('g')">▶ Run</button>
     <button class="reset-btn" onclick="doReset('g')">↺ Reset</button>
@@ -199,7 +199,7 @@
 // ══ STATE & DATA ════════════════════════════════════════════════════════════════
 const ST={c:{t:0,running:false,cm:0,am:0,ic:1,parts:[],atoms:[],lastLog:-1},g:{t:0,running:false,cm:0,am:0,ic:1,parts:[],atoms:[],lastLog:-1}};
 const ERED={au:{ion:'Au³⁺',charge:3,E:1.50},ag:{ion:'Ag⁺',charge:1,E:0.80},cu:{ion:'Cu²⁺',charge:2,E:0.34},ni:{ion:'Ni²⁺',charge:2,E:-0.23},zn:{ion:'Zn²⁺',charge:2,E:-0.76}};
-const SOL={aucl4:{metal:'au',ion:'AuCl₄⁻',conc:0.1},cuso4:{metal:'cu',ion:'CuSO₄',conc:0.5},water:{metal:null,ion:'H₂O',conc:1}};
+const SOL={aucl4:{metal:'au',ion:'AuCl₄⁻',conc:0.05},cuso4:{metal:'cu',ion:'CuSO₄',conc:0.5},water:{metal:null,ion:'H₂O',conc:1}};
 const SETUP={A:{cc:'basemetal',ca:'gold',cs:'aucl4',cv:3},B:{cc:'basemetal',ca:'copper',cs:'aucl4',cv:3},C:{cc:'basemetal',ca:'gold',cs:'aucl4',cv:0},D:{cc:'gold',ca:'gold',cs:'aucl4',cv:3}};
 
 function getP(t){return{cathode:document.getElementById(t+'c').value,anode:document.getElementById(t+'a').value,solution:document.getElementById(t+'s').value,voltage:parseFloat(document.getElementById(t+'v').value)};}
@@ -213,7 +213,7 @@ function gChange(){doReset('g');ecellPanel();}
 function gVolt(){document.getElementById('gvd').textContent=document.getElementById('gv').value+' V';meters('g');}
 
 function toggleRun(t){const st=ST[t];st.running=!st.running;const btn=document.getElementById(t+'-run');btn.textContent=st.running?'⏸ Pause':'▶ Run';}
-function tick(){['c','g'].forEach(t=>{if(ST[t].running){const st=ST[t];const p=getP(t);const spd=getSpeed(t);st.t+=0.016*spd;const{cr,cur}=rate(t);if(cr>0){st.cm+=cr*0.016;st.am-=cr*0.016;st.ic=Math.max(0,1-st.t/30);const ion=SOL[p.solution];if(ion.metal){for(let i=0;i<Math.ceil(cr*5);i++){const q={type:'dep',x:60+Math.random()*40,y:50+Math.random()*100,age:0,life:40+(Math.random()*20),tx:250+Math.random()*20,ty:200+Math.random()*10,landed:false};st.parts.push(q);}}}else{for(let i=0;i<Math.max(0,cr*2);i++){const e={type:'e',prog:0};st.parts.push(e);}}meters(t,cur);logObs(t);}draw(t)});requestAnimationFrame(tick);}
+function tick(){['c','g'].forEach(t=>{if(ST[t].running){const st=ST[t];const p=getP(t);const spd=getSpeed(t);st.t+=0.016*spd;const{cr,cur}=rate(t);if(cr>0){st.cm+=cr*0.016;st.am-=cr*0.016;st.ic=Math.max(0,1-st.t/20);const ion=SOL[p.solution];if(ion.metal){for(let i=0;i<Math.ceil(cr*5);i++){const q={type:'dep',x:60+Math.random()*40,y:50+Math.random()*100,age:0,life:40+(Math.random()*20),tx:250+Math.random()*20,ty:200+Math.random()*10,landed:false};st.parts.push(q);}}}else{for(let i=0;i<Math.max(0,cr*2);i++){const e={type:'e',prog:0};st.parts.push(e);}}meters(t,cur);logObs(t);}draw(t)});requestAnimationFrame(tick);}
 tick();
 
 function ecellPanel(){const p=getP('g');const cat=ERED[p.cathode];const an=ERED[p.anode];const E=cat.E-an.E;const spont=E>0;const html=`<strong>Cell potential:</strong> E°<sub>cell</sub> = ${cat.E.toFixed(2)} − (${an.E.toFixed(2)}) = <span class="mono">${E.toFixed(2)} V</span><span class="spont ${spont?'yes':'no'}">${spont?'Spontaneous':'Non-spontaneous'}</span><br><span class="dim">Voltage applied: ${p.voltage.toFixed(1)} V (${p.voltage>=Math.abs(E)?'sufficient':'insufficient'})</span>`;document.getElementById('g-ecell').innerHTML=html;}
@@ -222,8 +222,14 @@ function draw(t){const c=document.getElementById(t+'C');const ctx=c.getContext('
   // Vessels
   ctx.strokeStyle='#3a3528';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx_,cy_,r1,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(ax_,cy_,r1,0,Math.PI*2);ctx.stroke();
   
-  // Anode electrode (shrinks as it dissolves) - 10g gold anode
+  // Cathode electrode (grows thicker as gold deposits) - proportional to mass gained
   const p=getP(t);
+  const cathodeGrowth = 1 + (ST[t].cm * 0.3); // base radius 1 + growth from deposited gold
+  const cathodeRadius = Math.max(1, Math.min(20, cathodeGrowth)); // cap at 20px radius max
+  ctx.fillStyle='#d4af37'; // bright gold for deposited layer
+  ctx.beginPath();ctx.arc(cx_,cy_,cathodeRadius,0,Math.PI*2);ctx.fill();
+  
+  // Anode electrode (shrinks as it dissolves) - 10g gold anode
   if(p.anode==='gold'){
     const anodeMassRemaining = Math.max(0, 10 + ST[t].am);
     const massRatio = anodeMassRemaining / 10; // 1.0 = full 10g, 0.5 = 5g, 0 = gone
