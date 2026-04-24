@@ -12,17 +12,7 @@
     --red:#c44; --green:#4a9; --blue:#48a;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Crimson Pro',Georgia,serif;
-    font-size:16px;
-    min-height:100vh;
-    padding:20px 24px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
+  body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;min-height:100vh;padding:20px 24px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}
   .hdr{margin-bottom:14px;}
   .hdr h1{font-size:1.2em;font-weight:600;color:var(--gold);letter-spacing:.05em;text-transform:uppercase;}
   .hdr p{font-size:.86em;color:var(--text-dim);font-style:italic;margin-top:2px;}
@@ -60,7 +50,7 @@
   .mlabel{font-size:.67em;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:3px;}
   .mval{font-family:'JetBrains Mono',monospace;font-size:1.2em;color:var(--gold-bright);}
   .munit{font-size:.68em;color:var(--text-dim);margin-top:1px;}
-  .mval.red{color:var(--red);} .mval.green{color:var(--green);} .mval.blue{color:var(--blue);} .mval.dim{color:var(--text-dim);}
+  .mval.red{color:var(--red);}.mval.green{color:var(--green);}.mval.blue{color:var(--blue);}.mval.dim{color:var(--text-dim);}
   .ecell-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:11px 15px;font-size:.88em;line-height:1.75;}
   .ecell-panel .mono{font-family:'JetBrains Mono',monospace;font-size:.86em;color:var(--gold);}
   .ecell-panel .dim{color:var(--text-dim);}
@@ -80,8 +70,6 @@
   .speed-row{display:flex;align-items:center;gap:10px;margin-top:2px;}
   .speed-label{font-size:.72em;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);}
   .speed-val{font-family:'JetBrains Mono',monospace;font-size:.85em;color:var(--gold-bright);min-width:32px;text-align:right;}
-  .deposit-dot{position:absolute;border-radius:50%;pointer-events:none;animation:splat .35s ease-out forwards;}
-  @keyframes splat{0%{transform:scale(2.2);opacity:1;}100%{transform:scale(1);opacity:.85;}}
 </style>
 </head>
 <body>
@@ -136,7 +124,7 @@
     <button class="reset-btn" onclick="doReset('c')">↺ Reset</button>
   </div>
   <div class="right-panel">
-    <div class="cell-viz"><canvas id="cC" height="260"></canvas></div>
+    <div class="cell-viz"><canvas id="cC" width="450" height="260"></canvas></div>
     <div class="meters">
       <div class="meter"><div class="mlabel">Current</div><div class="mval dim" id="c-cur">0.00</div><div class="munit">Amps</div></div>
       <div class="meter"><div class="mlabel">Plating Rate</div><div class="mval dim" id="c-rate">0.000</div><div class="munit" id="c-rate-unit">mg/s</div></div>
@@ -181,7 +169,7 @@
     <button class="reset-btn" onclick="doReset('g')">↺ Reset</button>
   </div>
   <div class="right-panel">
-    <div class="cell-viz"><canvas id="gC" height="260"></canvas></div>
+    <div class="cell-viz"><canvas id="gC" width="450" height="260"></canvas></div>
     <div class="meters">
       <div class="meter"><div class="mlabel">Current</div><div class="mval dim" id="g-cur">0.00</div><div class="munit">Amps</div></div>
       <div class="meter"><div class="mlabel">Plating Rate</div><div class="mval dim" id="g-rate">0.000</div><div class="munit" id="g-rate-unit">mg/s</div></div>
@@ -196,7 +184,7 @@
 </div>
 
 <script>
-// ══ STATE & DATA ════════════════════════════════════════════════════════════════
+// STATE & DATA
 const ST={c:{t:0,running:false,cm:0,am:0,ic:1,parts:[],atoms:[],lastLog:-1},g:{t:0,running:false,cm:0,am:0,ic:1,parts:[],atoms:[],lastLog:-1}};
 const ERED={au:{ion:'Au³⁺',charge:3,E:1.50},ag:{ion:'Ag⁺',charge:1,E:0.80},cu:{ion:'Cu²⁺',charge:2,E:0.34},ni:{ion:'Ni²⁺',charge:2,E:-0.23},zn:{ion:'Zn²⁺',charge:2,E:-0.76}};
 const SOL={aucl4:{metal:'au',ion:'AuCl₄⁻',conc:0.05},cuso4:{metal:'cu',ion:'CuSO₄',conc:0.5},water:{metal:null,ion:'H₂O',conc:1}};
@@ -211,44 +199,143 @@ function cChange(){doReset('c');}
 function cVolt(){document.getElementById('cvd').textContent=document.getElementById('cv').value+' V';meters('c');}
 function gChange(){doReset('g');ecellPanel();}
 function gVolt(){document.getElementById('gvd').textContent=document.getElementById('gv').value+' V';meters('g');}
-
 function toggleRun(t){const st=ST[t];st.running=!st.running;const btn=document.getElementById(t+'-run');btn.textContent=st.running?'⏸ Pause':'▶ Run';}
-function tick(){['c','g'].forEach(t=>{if(ST[t].running){const st=ST[t];const p=getP(t);const spd=getSpeed(t);st.t+=0.016*spd;const{cr,cur}=rate(t);if(cr>0){st.cm+=cr*0.016;st.am-=cr*0.016;st.ic=Math.max(0,1-st.t/20);const ion=SOL[p.solution];if(ion.metal){for(let i=0;i<Math.ceil(cr*5);i++){const q={type:'dep',x:60+Math.random()*40,y:50+Math.random()*100,age:0,life:40+(Math.random()*20),tx:250+Math.random()*20,ty:200+Math.random()*10,landed:false};st.parts.push(q);}}}else{for(let i=0;i<Math.max(0,cr*2);i++){const e={type:'e',prog:0};st.parts.push(e);}}meters(t,cur);logObs(t);}draw(t)});requestAnimationFrame(tick);}
+
+function tick(){
+  ['c','g'].forEach(t=>{
+    if(ST[t].running){
+      const st=ST[t];
+      const p=getP(t);
+      const spd=getSpeed(t);
+      st.t+=0.016*spd;
+      const{cr,cur}=rate(t);
+      if(cr>0){
+        st.cm+=cr*0.016;
+        st.am-=cr*0.016;
+        st.ic=Math.max(0,1-st.t/20);
+        const ion=SOL[p.solution];
+        if(ion.metal){
+          for(let i=0;i<Math.ceil(cr*5);i++){
+            const q={type:'dep',x:60+Math.random()*40,y:50+Math.random()*100,age:0,life:40+(Math.random()*20),tx:250+Math.random()*20,ty:200+Math.random()*10,landed:false};
+            st.parts.push(q);
+          }
+        }else{
+          for(let i=0;i<Math.max(0,cr*2);i++){
+            const e={type:'e',prog:0};
+            st.parts.push(e);
+          }
+        }
+      }
+      meters(t,cur);
+      logObs(t);
+    }
+    draw(t);
+  });
+  requestAnimationFrame(tick);
+}
 tick();
 
-function ecellPanel(){const p=getP('g');const cat=ERED[p.cathode];const an=ERED[p.anode];const E=cat.E-an.E;const spont=E>0;const html=`<strong>Cell potential:</strong> E°<sub>cell</sub> = ${cat.E.toFixed(2)} − (${an.E.toFixed(2)}) = <span class="mono">${E.toFixed(2)} V</span><span class="spont ${spont?'yes':'no'}">${spont?'Spontaneous':'Non-spontaneous'}</span><br><span class="dim">Voltage applied: ${p.voltage.toFixed(1)} V (${p.voltage>=Math.abs(E)?'sufficient':'insufficient'})</span>`;document.getElementById('g-ecell').innerHTML=html;}
+function ecellPanel(){
+  const p=getP('g');
+  const cat=ERED[p.cathode];
+  const an=ERED[p.anode];
+  const E=cat.E-an.E;
+  const spont=E>0;
+  const html=`<strong>Cell potential:</strong> E°<sub>cell</sub> = ${cat.E.toFixed(2)} − (${an.E.toFixed(2)}) = <span class="mono">${E.toFixed(2)} V</span><span class="spont ${spont?'yes':'no'}">${spont?'Spontaneous':'Non-spontaneous'}</span><br><span class="dim">Voltage applied: ${p.voltage.toFixed(1)} V (${p.voltage>=Math.abs(E)?'sufficient':'insufficient'})</span>`;
+  document.getElementById('g-ecell').innerHTML=html;
+}
 
-function draw(t){const c=document.getElementById(t+'C');const ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;const w=c.width,h=c.height;ctx.fillStyle='#0f0e0c';ctx.fillRect(0,0,w,h);const cx_=130,cy_=120,ax_=320,wy=200,by=230,r1=45,r2=35;
+function draw(t){
+  const c=document.getElementById(t+'C');
+  const ctx=c.getContext('2d');
+  ctx.imageSmoothingEnabled=false;
+  const w=c.width,h=c.height;
+  
+  ctx.fillStyle='#0f0e0c';
+  ctx.fillRect(0,0,w,h);
+  
+  const cx_=130,cy_=120,ax_=320,wy=200,by=230,r1=45;
+  
   // Vessels
-  ctx.strokeStyle='#3a3528';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx_,cy_,r1,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(ax_,cy_,r1,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle='#3a3528';
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.arc(cx_,cy_,r1,0,Math.PI*2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(ax_,cy_,r1,0,Math.PI*2);
+  ctx.stroke();
   
-  // Cathode electrode (grows thicker as gold deposits) - proportional to mass gained
   const p=getP(t);
-  const cathodeGrowth = 1 + (ST[t].cm * 0.3); // base radius 1 + growth from deposited gold
-  const cathodeRadius = Math.max(1, Math.min(20, cathodeGrowth)); // cap at 20px radius max
-  ctx.fillStyle='#d4af37'; // bright gold for deposited layer
-  ctx.beginPath();ctx.arc(cx_,cy_,cathodeRadius,0,Math.PI*2);ctx.fill();
   
-  // Anode electrode (shrinks as it dissolves) - 10g gold anode
+  // Cathode (grows thicker as gold deposits)
+  const cathodeGrowth=1+(ST[t].cm*0.3);
+  const cathodeRadius=Math.max(1,Math.min(20,cathodeGrowth));
+  ctx.fillStyle='#d4af37';
+  ctx.beginPath();
+  ctx.arc(cx_,cy_,cathodeRadius,0,Math.PI*2);
+  ctx.fill();
+  
+  // Anode (shrinks as it dissolves)
   if(p.anode==='gold'){
-    const anodeMassRemaining = Math.max(0, 10 + ST[t].am);
-    const massRatio = anodeMassRemaining / 10; // 1.0 = full 10g, 0.5 = 5g, 0 = gone
-    const anode_h = 60 * massRatio; // height shrinks proportionally
+    const anodeMassRemaining=Math.max(0,10+ST[t].am);
+    const massRatio=anodeMassRemaining/10;
+    const anode_h=60*massRatio;
     ctx.fillStyle='#c9a84c';
-    ctx.fillRect(ax_-8, cy_+r1-anode_h, 16, anode_h); // draws from bottom up
+    ctx.fillRect(ax_-8,cy_+r1-anode_h,16,anode_h);
   }
   
   // Labels
-  ctx.fillStyle='#8a8070';ctx.font='italic 10px Courier New, monospace';ctx.textAlign='center';ctx.fillText('Cathode',cx_,cy_+r1+18);ctx.fillText('Anode',ax_,cy_+r1+18);
+  ctx.fillStyle='#8a8070';
+  ctx.font='bold 12px "Courier New", monospace';
+  ctx.textAlign='center';
+  ctx.fillText('Cathode',cx_,cy_+r1+18);
+  ctx.fillText('Anode',ax_,cy_+r1+18);
+  
   // Wire & battery
-  ctx.strokeStyle='#c9a84c';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(cx_,cy_-r1);ctx.lineTo(cx_,40);ctx.lineTo(ax_,40);ctx.lineTo(ax_,cy_-r1);ctx.stroke();
-  if(getP(t).voltage>0){ctx.fillStyle='#c9a84c';ctx.beginPath();ctx.moveTo(cx_-8,20);ctx.lineTo(cx_+8,20);ctx.fill();ctx.fillRect(cx_-2,15,4,10);}
+  ctx.strokeStyle='#c9a84c';
+  ctx.lineWidth=2.5;
+  ctx.beginPath();
+  ctx.moveTo(cx_,cy_-r1);
+  ctx.lineTo(cx_,40);
+  ctx.lineTo(ax_,40);
+  ctx.lineTo(ax_,cy_-r1);
+  ctx.stroke();
+  
+  if(p.voltage>0){
+    ctx.fillStyle='#c9a84c';
+    ctx.beginPath();
+    ctx.moveTo(cx_-8,20);
+    ctx.lineTo(cx_+8,20);
+    ctx.fill();
+    ctx.fillRect(cx_-2,15,4,10);
+  }
+  
   // Salt bridge
-  ctx.strokeStyle='#8a8070';ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cx_+r1,cy_);ctx.lineTo(ax_-r1,cy_);ctx.stroke();ctx.setLineDash([]);
-  // Electron flow
-  const ions=ST[t].parts.filter(q=>q.type==='dep');const hasIons=ions.length>0;if(hasIons){arrow(ctx,cx_,40,cx_-15,80,'#8a8070');arrow(ctx,ax_,40,ax_+15,80,'#8a8070');}
-  // Draw particles
-  const sm=SOL[p.solution];const ionD=sm?.metal?ERED[sm.metal]:null;const ionKey=sm?.metal||null;const ionLabel=ionD?ionD.ion[0]:'';const ionBaseCol=`rgba(201,168,76,A)`;const dep=ST[t].running&&ions.length>0;
+  ctx.strokeStyle='#8a8070';
+  ctx.lineWidth=2;
+  ctx.setLineDash([3,3]);
+  ctx.beginPath();
+  ctx.moveTo(cx_+r1,cy_);
+  ctx.lineTo(ax_-r1,cy_);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Particles
+  const ions=ST[t].parts.filter(q=>q.type==='dep');
+  const hasIons=ions.length>0;
+  if(hasIons){
+    arrow(ctx,cx_,40,cx_-15,80,'#8a8070');
+    arrow(ctx,ax_,40,ax_+15,80,'#8a8070');
+  }
+  
+  const sm=SOL[p.solution];
+  const ionD=sm?.metal?ERED[sm.metal]:null;
+  const ionKey=sm?.metal||null;
+  const ionLabel=ionD?ionD.ion[0]:'';
+  const ionBaseCol='rgba(201,168,76,A)';
+  const dep=ST[t].running&&ions.length>0;
+  
   ST[t].parts.forEach(q=>{
     const f=q.age/q.life;
     if(q.type==='dep'){
@@ -257,114 +344,164 @@ function draw(t){const c=document.getElementById(t+'C');const ctx=c.getContext('
       const y=q.y+(q.ty-q.y)*ease;
       const alpha=(q.landed?0:Math.min(1,(1-f)*2)).toFixed(2);
       const col=ionBaseCol.replace('A',alpha);
-      ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
-      ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);
+      ctx.beginPath();
+      ctx.arc(x,y,5,0,Math.PI*2);
+      ctx.fillStyle=col;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x,y,8,0,Math.PI*2);
       ctx.strokeStyle=col.replace('rgba','rgba').replace(/,[^,]+\)$/,',0.25)');
-      ctx.lineWidth=1.5;ctx.stroke();
-      if(ionLabel&&f<0.8){ctx.fillStyle=col;ctx.font='bold 12px Courier New, monospace';ctx.textAlign='center';ctx.fillText(ionLabel,x,y-10);}
-    } else {
-      const wl=ax_-cx_,ex=ax_-q.prog*wl;q.prog+=0.018;
+      ctx.lineWidth=1.5;
+      ctx.stroke();
+      if(ionLabel&&f<0.8){
+        ctx.fillStyle=col;
+        ctx.font='bold 12px "Courier New", monospace';
+        ctx.textAlign='center';
+        ctx.fillText(ionLabel,x,y-10);
+      }
+    }else{
+      const wl=ax_-cx_,ex=ax_-q.prog*wl;
+      q.prog+=0.018;
       const a=Math.max(0,1-Math.abs(q.prog-.5)*1.5);
-      ctx.beginPath();ctx.arc(ex,wy,3,0,Math.PI*2);ctx.fillStyle=`rgba(200,160,50,${a})`;ctx.fill();
+      ctx.beginPath();
+      ctx.arc(ex,wy,3,0,Math.PI*2);
+      ctx.fillStyle=`rgba(200,160,50,${a})`;
+      ctx.fill();
     }
   });
-
+  
   const rxY=by-6;
   if(p.voltage>0||(t==='g'&&getP(t).cathode)){
     if(ionD&&ionKey){
       const metal=ionKey[0].toUpperCase()+ionKey.slice(1);
-      ctx.fillStyle=dep?'#c9a84c':'#555';ctx.font='bold 12px Courier New, monospace';ctx.textAlign='center';
+      ctx.fillStyle=dep?'#c9a84c':'#555';
+      ctx.font='bold 12px "Courier New", monospace';
+      ctx.textAlign='center';
       ctx.fillText(`${ionD.ion} + ${ionD.charge}e⁻ → ${metal}(s)`,cx_,rxY);
     }
     let al='';
     const ad=ERED[p.anode];
     if(ad&&ad.ion)al=`${p.anode[0].toUpperCase()+p.anode.slice(1)}(s) → ${ad.ion} + ${ad.charge}e⁻`;
     else if(p.anode==='graphite')al='(inert)';
-    ctx.fillStyle=dep?'#c97830':'#555';ctx.fillText(al,ax_,rxY);
+    ctx.fillStyle=dep?'#c97830':'#555';
+    ctx.fillText(al,ax_,rxY);
   }
 }
 
 function arrow(ctx,x1,y1,x2,y2,col){
   const a=Math.atan2(y2-y1,x2-x1);
-  ctx.strokeStyle=col;ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-  ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.strokeStyle=col;
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  ctx.stroke();
+  ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
   ctx.lineTo(x2-8*Math.cos(a-.4),y2-8*Math.sin(a-.4));
   ctx.lineTo(x2-8*Math.cos(a+.4),y2-8*Math.sin(a+.4));
-  ctx.closePath();ctx.fill();
+  ctx.closePath();
+  ctx.fill();
 }
 
 function meters(t,cur=0){
   const st=ST[t];
   const el=id=>document.getElementById(id);
-  el(`${t}-cur`).textContent=cur.toFixed(2);el(`${t}-cur`).className='mval'+(cur>0?' green':' dim');
-
-  const {cr}=rate(t);
+  el(`${t}-cur`).textContent=cur.toFixed(2);
+  el(`${t}-cur`).className='mval'+(cur>0?' green':' dim');
+  
+  const{cr}=rate(t);
   const spd=getSpeed(t);
-  const realRate_gs = cr * spd;
-  let rateDisplay, rateUnit;
-  if(realRate_gs >= 0.001){
-    rateDisplay = realRate_gs.toFixed(4);
-    rateUnit = 'g/s';
-  } else {
-    rateDisplay = (realRate_gs * 1000).toFixed(4);
-    rateUnit = 'mg/s';
+  const realRate_gs=cr*spd;
+  let rateDisplay,rateUnit;
+  if(realRate_gs>=0.001){
+    rateDisplay=realRate_gs.toFixed(4);
+    rateUnit='g/s';
+  }else{
+    rateDisplay=(realRate_gs*1000).toFixed(4);
+    rateUnit='mg/s';
   }
-  el(`${t}-rate`).textContent = realRate_gs > 0 ? rateDisplay : '0.000';
-  el(`${t}-rate`).className = 'mval' + (realRate_gs > 0 ? ' green' : ' dim');
-  el(`${t}-rate-unit`).textContent = realRate_gs > 0 ? rateUnit : 'mg/s';
-
-  el(`${t}-cm`).textContent=(st.cm>=0?'+':'')+st.cm.toFixed(3);el(`${t}-cm`).className='mval'+(st.cm>0.001?' green':' dim');
-  const anodeMassRemaining = Math.max(0, 10 + st.am);
+  el(`${t}-rate`).textContent=realRate_gs>0?rateDisplay:'0.000';
+  el(`${t}-rate`).className='mval'+(realRate_gs>0?' green':' dim');
+  el(`${t}-rate-unit`).textContent=realRate_gs>0?rateUnit:'mg/s';
+  
+  el(`${t}-cm`).textContent=(st.cm>=0?'+':'')+st.cm.toFixed(3);
+  el(`${t}-cm`).className='mval'+(st.cm>0.001?' green':' dim');
+  
+  const anodeMassRemaining=Math.max(0,10+st.am);
   const p2=getP(t);
-  const anodeLabel = p2.anode==='gold' ? `${anodeMassRemaining.toFixed(3)}g` : (st.am>=0?'+':'')+st.am.toFixed(3);
+  const anodeLabel=p2.anode==='gold'?`${anodeMassRemaining.toFixed(3)}g`:(st.am>=0?'+':'')+st.am.toFixed(3);
   el(`${t}-am`).textContent=anodeLabel;
   el(`${t}-am`).className='mval'+(st.am<-0.001?' red':' dim');
+  
   const amLabel=document.getElementById(`${t}-am-label`);
-  if(amLabel) amLabel.textContent=p2.anode==='gold'?'Anode Mass':'Anode Δmass';
+  if(amLabel)amLabel.textContent=p2.anode==='gold'?'Anode Mass':'Anode Δmass';
   const amUnit=document.getElementById(`${t}-am-unit`);
-  if(amUnit) amUnit.textContent=p2.anode==='gold'?'g remaining':'grams';
-  el(`${t}-ic`).textContent=(st.ic*100).toFixed(0)+'%';el(`${t}-ic`).className='mval'+(st.ic<0.3?' red':st.ic<0.7?' blue':' green');
+  if(amUnit)amUnit.textContent=p2.anode==='gold'?'g remaining':'grams';
+  
+  el(`${t}-ic`).textContent=(st.ic*100).toFixed(0)+'%';
+  el(`${t}-ic`).className='mval'+(st.ic<0.3?' red':st.ic<0.7?' blue':' green');
 }
 
 function logObs(t){
-  const st=ST[t];const ti=Math.floor(st.t);
-  if(ti===st.lastLog)return;st.lastLog=ti;
-  const p=getP(t);const sm=SOL[p.solution];
-  const {cr,cur}=rate(t);
+  const st=ST[t];
+  const ti=Math.floor(st.t);
+  if(ti===st.lastLog)return;
+  st.lastLog=ti;
+  const p=getP(t);
+  const sm=SOL[p.solution];
+  const{cr,cur}=rate(t);
   const metal=sm?.metal||'';
   const aMatch=sm&&sm.metal===p.anode&&p.anode!=='graphite';
   let msg='',cls='';
+  
   if(ti===1){
     if(cur===0&&p.voltage===0){msg='Voltage is 0 V — no current. Nothing happens.';cls='warn';}
     else if(cur===0&&(!sm||!sm.metal)){msg='No depositable ions in solution.';cls='warn';}
     else if(cur===0){msg='Voltage too low to drive this reaction.';cls='warn';}
     else{msg=`Current flowing. ${metal?metal[0].toUpperCase()+metal.slice(1):''} ions migrating to cathode.`;cls='good';}
-  } else if(ti===5&&cr>0){
+  }else if(ti===5&&cr>0){
     msg=`Thin ${metal} layer forming on cathode. Anode ${aMatch?'dissolving (mass decreasing)':'unchanged (inert or mismatched)'}.`;cls='hi';
-  } else if(ti===12&&!aMatch&&cr>0){
+  }else if(ti===12&&!aMatch&&cr>0){
     msg='Ion concentration dropping — anode not replenishing solution. Deposition will slow.';cls='warn';
-  } else if(ti===20&&st.ic<0.3&&cr>0){
+  }else if(ti===20&&st.ic<0.3&&cr>0){
     msg='Ion concentration critically low. Plating nearly stopped.';cls='warn';
-  } else if(ti===10&&t==='c'&&p.cathode==='gold'&&cr>0){
+  }else if(ti===10&&t==='c'&&p.cathode==='gold'&&cr>0){
     msg='Plating gold onto gold — wasteful. A forger uses a cheaper base-metal cathode.';cls='hi';
-  } else if(ti%10===0&&ti>0&&cr>0){
+  }else if(ti%10===0&&ti>0&&cr>0){
     msg=`${ti}s elapsed. Cathode: +${st.cm.toFixed(3)}g. Anode: ${st.am.toFixed(3)}g.`;
   }
+  
   if(!msg)return;
   const log=document.getElementById(t+'-log');
-  const e=document.createElement('div');e.className='e';
-  const ts=document.createElement('span');ts.className='ts';ts.textContent=`${Math.floor(ti/60)}:${String(ti%60).padStart(2,'0')}`;
-  const m=document.createElement('span');m.className='msg'+(cls?' '+cls:'');m.textContent=msg;
-  e.appendChild(ts);e.appendChild(m);log.appendChild(e);log.scrollTop=log.scrollHeight;
+  const e=document.createElement('div');
+  e.className='e';
+  const ts=document.createElement('span');
+  ts.className='ts';
+  ts.textContent=`${Math.floor(ti/60)}:${String(ti%60).padStart(2,'0')}`;
+  const m=document.createElement('span');
+  m.className='msg'+(cls?' '+cls:'');
+  m.textContent=msg;
+  e.appendChild(ts);
+  e.appendChild(m);
+  log.appendChild(e);
+  log.scrollTop=log.scrollHeight;
 }
 
 function doReset(t){
   const st=ST[t];
   if(st.running)toggleRun(t);
-  st.t=0;st.cm=0;st.am=0;st.ic=1;st.parts=[];st.atoms=[];st.lastLog=-1;
+  st.t=0;
+  st.cm=0;
+  st.am=0;
+  st.ic=1;
+  st.parts=[];
+  st.atoms=[];
+  st.lastLog=-1;
   document.getElementById(t+'-log').innerHTML='<div class="e"><span class="ts">0:00</span><span class="msg">Ready. Press Run to begin.</span></div>';
-  meters(t);draw(t);
+  meters(t);
+  draw(t);
   if(t==='g')ecellPanel();
 }
 
