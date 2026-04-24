@@ -12,7 +12,17 @@
     --red:#c44; --green:#4a9; --blue:#48a;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:16px;min-height:100vh;padding:20px 24px;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Crimson Pro',Georgia,serif;
+    font-size:16px;
+    min-height:100vh;
+    padding:20px 24px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
   .hdr{margin-bottom:14px;}
   .hdr h1{font-size:1.2em;font-weight:600;color:var(--gold);letter-spacing:.05em;text-transform:uppercase;}
   .hdr p{font-size:.86em;color:var(--text-dim);font-style:italic;margin-top:2px;}
@@ -44,7 +54,7 @@
   .reset-btn:hover{border-color:var(--text-dim);color:var(--text);}
   .right-panel{display:flex;flex-direction:column;gap:13px;}
   .cell-viz{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:14px;}
-  canvas{width:100%;height:260px;display:block;}
+  canvas{width:100%;height:260px;display:block;image-rendering:crisp-edges;}
   .meters{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;}
   .meter{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center;}
   .mlabel{font-size:.67em;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:3px;}
@@ -132,10 +142,10 @@
       <div class="meter"><div class="mlabel">Plating Rate</div><div class="mval dim" id="c-rate">0.000</div><div class="munit" id="c-rate-unit">mg/s</div></div>
       <div class="meter"><div class="mlabel">Cathode Δmass</div><div class="mval dim" id="c-cm">+0.000</div><div class="munit">grams</div></div>
       <div class="meter"><div class="mlabel" id="c-am-label">Anode Δmass</div><div class="mval dim" id="c-am">+0.000</div><div class="munit" id="c-am-unit">grams</div></div>
-      <div class="meter"><div class="mlabel">Ion Conc.</div><div class="mval green" id="c-ic">100%</div><div class="munit">relative</div></div>
+      <div class="meter"><div class="mlabel">Ion Conc.</div><div class="mval dim" id="c-ic">100%</div><div class="munit">remaining</div></div>
     </div>
-    <div class="obs-panel"><div class="obs-title">Observation Log</div>
-      <div class="obs-log" id="c-log"><div class="e"><span class="ts">0:00</span><span class="msg">Ready. Press Run to begin.</span></div></div></div>
+    <div class="ecell-panel" id="c-ecell"></div>
+    <div class="obs-panel"><div class="obs-title">Observations</div><div class="obs-log" id="c-log"><div class="e"><span class="ts">0:00</span><span class="msg">Ready. Press Run to begin.</span></div></div></div>
   </div>
 </div>
 </div>
@@ -144,52 +154,26 @@
 <div class="tab-panel" id="tab-general">
 <div class="layout">
   <div class="controls">
-    <div class="cg"><label>Cathode (object being plated)</label>
+    <div class="cg"><label>Cathode reduction</label>
       <select id="gc" onchange="gChange()">
-        <option value="iron">Iron rod (Fe)</option>
-        <option value="zinc">Zinc plate (Zn)</option>
-        <option value="copper">Copper strip (Cu)</option>
-        <option value="silver">Silver rod (Ag)</option>
-        <option value="gold">Gold bar (Au)</option>
-        <option value="aluminum">Aluminum foil (Al)</option>
-        <option value="nickel">Nickel strip (Ni)</option>
-        <option value="lead">Lead plate (Pb)</option>
-        <option value="tin">Tin strip (Sn)</option>
-        <option value="basemetal">Base-metal coin</option>
-        <option value="washer">Steel washer</option>
-        <option value="key">Metal key</option>
-        <option value="spoon">Metal spoon</option>
+        <option value="au">Au³⁺ + 3e⁻ → Au(s)</option>
+        <option value="ag">Ag⁺ + e⁻ → Ag(s)</option>
+        <option value="cu">Cu²⁺ + 2e⁻ → Cu(s)</option>
+        <option value="ni">Ni²⁺ + 2e⁻ → Ni(s)</option>
+        <option value="zn">Zn²⁺ + 2e⁻ → Zn(s)</option>
       </select></div>
-    <div class="cg"><label>Anode</label>
+    <div class="cg"><label>Anode oxidation</label>
       <select id="ga" onchange="gChange()">
-        <option value="copper">Copper strip (Cu)</option>
-        <option value="zinc">Zinc plate (Zn)</option>
-        <option value="iron">Iron rod (Fe)</option>
-        <option value="silver">Silver rod (Ag)</option>
-        <option value="gold">Gold bar (Au)</option>
-        <option value="aluminum">Aluminum (Al)</option>
-        <option value="nickel">Nickel strip (Ni)</option>
-        <option value="lead">Lead plate (Pb)</option>
-        <option value="tin">Tin strip (Sn)</option>
-        <option value="graphite">Graphite electrode (inert)</option>
-      </select></div>
-    <div class="cg"><label>Electrolyte solution</label>
-      <select id="gs" onchange="gChange()">
-        <option value="cuso4">CuSO₄ — copper(II) sulfate</option>
-        <option value="znso4">ZnSO₄ — zinc sulfate</option>
-        <option value="feso4">FeSO₄ — iron(II) sulfate</option>
-        <option value="agno3">AgNO₃ — silver nitrate</option>
-        <option value="aucl4">AuCl₄⁻ — gold chloride</option>
-        <option value="niso4">NiSO₄ — nickel sulfate</option>
-        <option value="pbno3">Pb(NO₃)₂ — lead nitrate</option>
-        <option value="snso4">SnSO₄ — tin sulfate</option>
-        <option value="nacl">NaCl — salt water</option>
-        <option value="h2so4">H₂SO₄ — dilute sulfuric acid</option>
+        <option value="au">Au(s) → Au³⁺ + 3e⁻</option>
+        <option value="ag">Ag(s) → Ag⁺ + e⁻</option>
+        <option value="cu">Cu(s) → Cu²⁺ + 2e⁻</option>
+        <option value="ni">Ni(s) → Ni²⁺ + 2e⁻</option>
+        <option value="zn">Zn(s) → Zn²⁺ + 2e⁻</option>
+        <option value="graphite">Graphite (inert)</option>
       </select></div>
     <div class="cg"><label>Battery voltage</label>
-      <div class="vrow"><input type="range" id="gv" min="0" max="9" step="0.5" value="3" oninput="gVolt()">
-        <span class="vval" id="gvd">3.0 V</span></div></div>
-    <hr class="divider">
+      <div class="vrow"><input type="range" id="gv" min="0" max="6" step="0.5" value="2" oninput="gVolt()">
+        <span class="vval" id="gvd">2.0 V</span></div></div>
     <div class="cg">
       <div class="speed-row"><span class="speed-label">Sim speed</span><input type="range" id="g-speed" min="0.5" max="20" step="0.5" value="3" oninput="document.getElementById('g-spd').textContent=this.value+'×'"><span class="speed-val" id="g-spd">3×</span></div>
     </div>
@@ -198,401 +182,68 @@
   </div>
   <div class="right-panel">
     <div class="cell-viz"><canvas id="gC" height="260"></canvas></div>
-    <div class="ecell-panel" id="g-ep"></div>
     <div class="meters">
       <div class="meter"><div class="mlabel">Current</div><div class="mval dim" id="g-cur">0.00</div><div class="munit">Amps</div></div>
       <div class="meter"><div class="mlabel">Plating Rate</div><div class="mval dim" id="g-rate">0.000</div><div class="munit" id="g-rate-unit">mg/s</div></div>
       <div class="meter"><div class="mlabel">Cathode Δmass</div><div class="mval dim" id="g-cm">+0.000</div><div class="munit">grams</div></div>
-      <div class="meter"><div class="mlabel" id="g-am-label">Anode Δmass</div><div class="mval dim" id="g-am">+0.000</div><div class="munit" id="g-am-unit">grams</div></div>
-      <div class="meter"><div class="mlabel">Ion Conc.</div><div class="mval green" id="g-ic">100%</div><div class="munit">relative</div></div>
+      <div class="meter"><div class="mlabel">Anode Δmass</div><div class="mval dim" id="g-am">+0.000</div><div class="munit">grams</div></div>
+      <div class="meter"><div class="mlabel">Ion Conc.</div><div class="mval dim" id="g-ic">100%</div><div class="munit">remaining</div></div>
     </div>
-    <div class="obs-panel"><div class="obs-title">Observation Log</div>
-      <div class="obs-log" id="g-log"><div class="e"><span class="ts">0:00</span><span class="msg">Ready. Press Run to begin.</span></div></div></div>
+    <div class="ecell-panel" id="g-ecell"></div>
+    <div class="obs-panel"><div class="obs-title">Observations</div><div class="obs-log" id="g-log"><div class="e"><span class="ts">0:00</span><span class="msg">Ready. Press Run to begin.</span></div></div></div>
   </div>
 </div>
 </div>
 
 <script>
-// ══ DATA ══════════════════════════════════════════════════════════════════════
-const ERED = {
-  gold:     {val:1.50, ion:'Au³⁺', charge:3, color:'#c9a84c', ic:'rgba(200,160,40,A)'},
-  silver:   {val:0.80, ion:'Ag⁺',  charge:1, color:'#c0c0c0', ic:'rgba(190,190,190,A)'},
-  copper:   {val:0.34, ion:'Cu²⁺', charge:2, color:'#b5631a', ic:'rgba(50,130,220,A)'},
-  hydrogen: {val:0.00, ion:'H⁺',   charge:1, color:'#aaa',    ic:'rgba(200,200,200,A)'},
-  lead:     {val:-0.13,ion:'Pb²⁺', charge:2, color:'#778',    ic:'rgba(130,130,170,A)'},
-  tin:      {val:-0.14,ion:'Sn²⁺', charge:2, color:'#9ab',    ic:'rgba(150,180,180,A)'},
-  nickel:   {val:-0.25,ion:'Ni²⁺', charge:2, color:'#6a9a6a', ic:'rgba(80,170,80,A)'},
-  iron:     {val:-0.44,ion:'Fe²⁺', charge:2, color:'#8a7a6a', ic:'rgba(150,100,50,A)'},
-  zinc:     {val:-0.76,ion:'Zn²⁺', charge:2, color:'#9aafbf', ic:'rgba(90,160,200,A)'},
-  aluminum: {val:-1.66,ion:'Al³⁺', charge:3, color:'#c0c8d0', ic:'rgba(180,200,220,A)'},
-  graphite: {val:null, ion:null,   charge:0, color:'#686868', ic:null},
-};
-const SOL = {
-  cuso4: {metal:'copper',  name:'CuSO₄ (aq)',      fill:'rgba(30,80,200,A)'},
-  znso4: {metal:'zinc',    name:'ZnSO₄ (aq)',      fill:'rgba(80,160,200,A)'},
-  feso4: {metal:'iron',    name:'FeSO₄ (aq)',      fill:'rgba(140,100,40,A)'},
-  agno3: {metal:'silver',  name:'AgNO₃ (aq)',      fill:'rgba(200,200,200,A)'},
-  aucl4: {metal:'gold',    name:'AuCl₄⁻ (aq)',     fill:'rgba(180,140,20,A)'},
-  niso4: {metal:'nickel',  name:'NiSO₄ (aq)',      fill:'rgba(60,180,60,A)'},
-  pbno3: {metal:'lead',    name:'Pb(NO₃)₂ (aq)',   fill:'rgba(130,130,170,A)'},
-  snso4: {metal:'tin',     name:'SnSO₄ (aq)',      fill:'rgba(150,180,180,A)'},
-  nacl:  {metal:null,      name:'NaCl (aq)',        fill:'rgba(80,120,160,A)'},
-  h2so4: {metal:'hydrogen',name:'H₂SO₄ (aq)',      fill:'rgba(200,200,240,A)'},
-  water: {metal:null,      name:'H₂O (pure)',       fill:'rgba(50,90,130,A)'},
-};
-const OBJ_COL = {basemetal:'#8899aa',washer:'#7a8878',key:'#9a9060',spoon:'#b0a080'};
-const OBJ_NAME = {
-  gold:'Gold electrode',silver:'Silver electrode',copper:'Copper strip',zinc:'Zinc plate',
-  iron:'Iron rod',aluminum:'Aluminum',nickel:'Nickel strip',lead:'Lead plate',tin:'Tin strip',
-  graphite:'Graphite (inert)',basemetal:'Base-metal coin',washer:'Steel washer',
-  key:'Metal key',spoon:'Metal spoon',
-};
-function eCol(k){return ERED[k]?ERED[k].color:OBJ_COL[k]||'#aaa';}
-function eName(k){return OBJ_NAME[k]||k;}
+// ══ STATE & DATA ════════════════════════════════════════════════════════════════
+const ST={c:{t:0,running:false,cm:0,am:0,ic:1,parts:[],atoms:[],lastLog:-1},g:{t:0,running:false,cm:0,am:0,ic:1,parts:[],atoms:[],lastLog:-1}};
+const ERED={au:{ion:'Au³⁺',charge:3,E:1.50},ag:{ion:'Ag⁺',charge:1,E:0.80},cu:{ion:'Cu²⁺',charge:2,E:0.34},ni:{ion:'Ni²⁺',charge:2,E:-0.23},zn:{ion:'Zn²⁺',charge:2,E:-0.76}};
+const SOL={aucl4:{metal:'au',ion:'AuCl₄⁻',conc:0.1},cuso4:{metal:'cu',ion:'CuSO₄',conc:0.5},water:{metal:null,ion:'H₂O',conc:1}};
+const SETUP={A:{cc:'basemetal',ca:'gold',cs:'aucl4',cv:3},B:{cc:'basemetal',ca:'copper',cs:'aucl4',cv:3},C:{cc:'basemetal',ca:'gold',cs:'aucl4',cv:0},D:{cc:'gold',ca:'gold',cs:'aucl4',cv:3}};
 
-// ══ STATE ═════════════════════════════════════════════════════════════════════
-function mkSt(){return{running:false,t:0,cm:0,am:0,ic:1,parts:[],atoms:[],lastLog:-1,af:null,lts:null};}
-const ST={c:mkSt(),g:mkSt()};
+function getP(t){return{cathode:document.getElementById(t+'c').value,anode:document.getElementById(t+'a').value,solution:document.getElementById(t+'s').value,voltage:parseFloat(document.getElementById(t+'v').value)};}
+function getSpeed(t){return parseFloat(document.getElementById(t+'-speed').value);}
+function rate(t){const p=getP(t);const sm=SOL[p.solution];const cr=(p.voltage>1?0.001:0)*getSpeed(t)*(sm?.conc||0)*ST[t].ic;return{cr,cur:p.voltage>0?0.5+(p.voltage*0.8):0};}
+function switchTab(n){document.querySelectorAll('.tab-panel').forEach(e=>e.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active');document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));event.target.classList.add('active');}
+function loadSetup(s){const x=SETUP[s];document.getElementById('cc').value=x.cc;document.getElementById('ca').value=x.ca;document.getElementById('cs').value=x.cs;document.getElementById('cv').value=x.cv;document.getElementById('cvd').textContent=x.cv+' V';document.querySelectorAll('.setup-btn').forEach(e=>e.classList.remove('active'));document.getElementById('cb-'+s).classList.add('active');cChange();}
+function cChange(){doReset('c');}
+function cVolt(){document.getElementById('cvd').textContent=document.getElementById('cv').value+' V';meters('c');}
+function gChange(){doReset('g');ecellPanel();}
+function gVolt(){document.getElementById('gvd').textContent=document.getElementById('gv').value+' V';meters('g');}
 
-// ══ CANVASES ══════════════════════════════════════════════════════════════════
-const CVS={c:document.getElementById('cC'),g:document.getElementById('gC')};
-const CTX={c:CVS.c.getContext('2d'),g:CVS.g.getContext('2d')};
-function resize(){
-  ['c','g'].forEach(t=>{const c=CVS[t],w=c.parentElement.getBoundingClientRect().width-28;c.width=Math.max(380,w);c.height=260;});
-}
-window.addEventListener('resize',()=>{resize();draw('c');draw('g');});
-resize();
+function toggleRun(t){const st=ST[t];st.running=!st.running;const btn=document.getElementById(t+'-run');btn.textContent=st.running?'⏸ Pause':'▶ Run';}
+function tick(){['c','g'].forEach(t=>{if(ST[t].running){const st=ST[t];const p=getP(t);const spd=getSpeed(t);st.t+=0.016*spd;const{cr,cur}=rate(t);if(cr>0){st.cm+=cr*0.016;st.am-=cr*0.016;st.ic=Math.max(0,1-st.t/30);const ion=SOL[p.solution];if(ion.metal){for(let i=0;i<Math.ceil(cr*5);i++){const q={type:'dep',x:60+Math.random()*40,y:50+Math.random()*100,age:0,life:40+(Math.random()*20),tx:250+Math.random()*20,ty:200+Math.random()*10,landed:false};st.parts.push(q);}}}else{for(let i=0;i<Math.max(0,cr*2);i++){const e={type:'e',prog:0};st.parts.push(e);}}meters(t,cur);logObs(t);}draw(t)});requestAnimationFrame(tick);}
+tick();
 
-// ══ TABS ══════════════════════════════════════════════════════════════════════
-function switchTab(t){
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['case','general'][i]===t));
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('tab-'+t).classList.add('active');
-  setTimeout(()=>{resize();draw(t==='case'?'c':'g');},10);
-}
+function ecellPanel(){const p=getP('g');const cat=ERED[p.cathode];const an=ERED[p.anode];const E=cat.E-an.E;const spont=E>0;const html=`<strong>Cell potential:</strong> E°<sub>cell</sub> = ${cat.E.toFixed(2)} − (${an.E.toFixed(2)}) = <span class="mono">${E.toFixed(2)} V</span><span class="spont ${spont?'yes':'no'}">${spont?'Spontaneous':'Non-spontaneous'}</span><br><span class="dim">Voltage applied: ${p.voltage.toFixed(1)} V (${p.voltage>=Math.abs(E)?'sufficient':'insufficient'})</span>`;document.getElementById('g-ecell').innerHTML=html;}
 
-// ══ PARAM GETTERS ════════════════════════════════════════════════════════════
-function getP(t){
-  if(t==='c') return{cathode:document.getElementById('cc').value,anode:document.getElementById('ca').value,solution:document.getElementById('cs').value,voltage:+document.getElementById('cv').value};
-  return{cathode:document.getElementById('gc').value,anode:document.getElementById('ga').value,solution:document.getElementById('gs').value,voltage:+document.getElementById('gv').value};
-}
-
-// ══ CASE SETUP LOADER ════════════════════════════════════════════════════════
-function loadSetup(id){
-  doReset('c');
-  ['A','B','C','D'].forEach(x=>document.getElementById('cb-'+x).classList.toggle('active',x===id));
-  const s={A:{cathode:'basemetal',anode:'gold',solution:'aucl4',voltage:3},
-            B:{cathode:'basemetal',anode:'graphite',solution:'aucl4',voltage:3},
-            C:{cathode:'basemetal',anode:'gold',solution:'aucl4',voltage:0},
-            D:{cathode:'gold',anode:'gold',solution:'aucl4',voltage:3}}[id];
-  document.getElementById('cc').value=s.cathode;
-  document.getElementById('ca').value=s.anode;
-  document.getElementById('cs').value=s.solution;
-  document.getElementById('cv').value=s.voltage;
-  document.getElementById('cvd').textContent=s.voltage.toFixed(1)+' V';
-  draw('c');meters('c');
-}
-function cChange(){['A','B','C','D'].forEach(x=>document.getElementById('cb-'+x).classList.remove('active'));draw('c');meters('c');}
-function cVolt(){const v=+document.getElementById('cv').value;document.getElementById('cvd').textContent=v.toFixed(1)+' V';cChange();}
-function gChange(){draw('g');meters('g');ecellPanel();}
-function gVolt(){const v=+document.getElementById('gv').value;document.getElementById('gvd').textContent=v.toFixed(1)+' V';gChange();}
-
-// ══ ECELL ════════════════════════════════════════════════════════════════════
-function calcEcell(t){
+function draw(t){const c=document.getElementById(t+'C');const ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;const w=c.width,h=c.height;ctx.fillStyle='#0f0e0c';ctx.fillRect(0,0,w,h);const cx_=130,cy_=120,ax_=320,wy=200,by=230,r1=45,r2=35;
+  // Vessels
+  ctx.strokeStyle='#3a3528';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx_,cy_,r1,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(ax_,cy_,r1,0,Math.PI*2);ctx.stroke();
+  
+  // Anode electrode (shrinks as it dissolves) - 10g gold anode
   const p=getP(t);
-  const sm=SOL[p.solution];
-  if(!sm||!sm.metal||sm.metal==='hydrogen'&&p.solution!=='h2so4') return{ecell:null,spont:null,cRxn:'',aRxn:'',minV:99};
-  const ionKey=sm.metal;
-  const ionD=ERED[ionKey];
-  const anodeD=ERED[p.anode];
-  if(!ionD) return{ecell:null,spont:null,cRxn:'',aRxn:'',minV:99};
-  const ered=ionD.val;
-  const cRxn=`${ionD.ion} + ${ionD.charge}e⁻ → ${ionKey[0].toUpperCase()+ionKey.slice(1)}(s)   E°red = ${ered>=0?'+':''}${ered.toFixed(2)} V`;
-  if(!anodeD||anodeD.val===null){
-    return{ecell:null,spont:null,cRxn,aRxn:'(inert electrode)',minV:Math.max(0,-ered+0.3)};
+  if(p.anode==='gold'){
+    const anodeMassRemaining = Math.max(0, 10 + ST[t].am);
+    const massRatio = anodeMassRemaining / 10; // 1.0 = full 10g, 0.5 = 5g, 0 = gone
+    const anode_h = 60 * massRatio; // height shrinks proportionally
+    ctx.fillStyle='#c9a84c';
+    ctx.fillRect(ax_-8, cy_+r1-anode_h, 16, anode_h); // draws from bottom up
   }
-  const eox=-anodeD.val;
-  const ecell=ered+eox;
-  const aRxn=`${p.anode[0].toUpperCase()+p.anode.slice(1)}(s) → ${anodeD.ion} + ${anodeD.charge}e⁻   E°ox = ${eox>=0?'+':''}${eox.toFixed(2)} V`;
-  return{ecell,spont:ecell>0,cRxn,aRxn,minV:ecell>0?0:Math.abs(ecell)+0.1};
-}
-
-function ecellPanel(){
-  const p=getP('g');
-  const info=calcEcell('g');
-  const sm=SOL[p.solution];
-  let h='';
-  if(info.cRxn) h+=`<div><span class="dim">Cathode: </span><span class="mono">${info.cRxn}</span></div>`;
-  if(info.aRxn) h+=`<div><span class="dim">Anode:   </span><span class="mono">${info.aRxn}</span></div>`;
-  if(info.ecell!==null){
-    const sg=info.ecell>=0?'+':'';
-    const col=info.spont?'#4a9':'#c44';
-    const sl=info.spont?'✓ spontaneous':'✗ non-spontaneous';
-    h+=`<div style="margin-top:5px"><span class="dim">E°cell = </span><span class="mono" style="font-size:1.1em;color:${col}">${sg}${info.ecell.toFixed(2)} V</span><span class="spont ${info.spont?'yes':'no'}">${sl}</span></div>`;
-    if(!info.spont) h+=`<div style="margin-top:2px;font-size:.83em;color:var(--text-dim)">Minimum applied voltage needed: ${info.minV.toFixed(2)} V</div>`;
-  } else if(sm&&!sm.metal){
-    h+=`<div style="color:var(--text-dim);font-style:italic;margin-top:4px">${p.solution==='nacl'?'NaCl provides conductivity but Na⁺ won\'t deposit. Electrolysis of water may occur at high voltages.':'No depositable metal ions in this solution.'}</div>`;
-  }
-  document.getElementById('g-ep').innerHTML=h;
-}
-
-// ══ DEPOSIT RATE ══════════════════════════════════════════════════════════════
-function rate(t){
-  const p=getP(t);
-  const st=ST[t];
-  const sm=SOL[p.solution];
-  if(!sm||!sm.metal) return{cr:0,ar:0,cur:0};
-  const info=calcEcell(t);
-  const effectiveV=info.spont?Math.max(info.ecell,p.voltage):p.voltage;
-  if(effectiveV<info.minV&&!info.spont) return{cr:0,ar:0,cur:0};
-  if(p.voltage===0&&!info.spont) return{cr:0,ar:0,cur:0};
-  const drive=Math.max(0,effectiveV-info.minV+0.3);
-  const cr=0.0007*drive*st.ic;
-  const cur=0.12*drive*st.ic;
-  const anodeMatch=sm.metal===p.anode&&p.anode!=='graphite';
-  const ar=anodeMatch?-cr*1.01:0;
-  return{cr,ar,cur};
-}
-
-// ══ RUN/STOP ══════════════════════════════════════════════════════════════════
-function toggleRun(t){
-  const st=ST[t];
-  const btn=document.getElementById(t+'-run');
-  if(st.running){st.running=false;btn.textContent='▶ Run';cancelAnimationFrame(st.af);}
-  else{st.running=true;btn.textContent='⏹ Stop';st.lts=null;st.af=requestAnimationFrame(ts=>loop(t,ts));}
-}
-function getSpeed(t){return +(document.getElementById(t+'-speed')?.value||3);}
-function loop(t,ts){
-  const st=ST[t];
-  if(!st.lts)st.lts=ts;
-  const dt=Math.min((ts-st.lts)/1000,0.1);st.lts=ts;
-  const spd=getSpeed(t);
-  const sim=dt*spd;st.t+=sim;
-  const p=getP(t);
-  const {cr,ar,cur}=rate(t);
-  st.cm+=cr*sim;st.am+=ar*sim;
-  const sm=SOL[p.solution];
-  const aMatch=sm&&sm.metal===p.anode&&p.anode!=='graphite';
-  if(!aMatch&&cr>0)st.ic=Math.max(0,st.ic-0.00008*sim);
-  // Spawn travelling ion particles (more frequent, slower)
-  const spawnRate=cr>0?Math.min(0.9,0.5+cr*200):0;
-  if(cr>0&&Math.random()<spawnRate*dt*8)spawnP(t,'dep');
-  if(cur>0&&Math.random()<0.4*dt*8)spawnP(t,'el');
-  updParts(t,dt,spd); // pass real dt for smooth animation
-  draw(t);meters(t,cur);logObs(t);
-  if(st.running)st.af=requestAnimationFrame(ts2=>loop(t,ts2));
-}
-
-// ══ PARTICLES ════════════════════════════════════════════════════════════════
-function spawnP(t,type){
-  const st=ST[t];const c=CVS[t];
-  const cx=c.width/2-65,ax=c.width/2+65;
-  const by=70;
-  const p=getP(t);
-  const isCoin=['basemetal','washer','key','spoon'].includes(p.cathode);
-  const sm=SOL[p.solution];
-  const coinCy=by+68;
-  const coinR=30;
-  const plateThick=Math.min(st.cm*600,14);
-  if(type==='dep'){
-    const startX=ax+(Math.random()-.3)*60;
-    const startY=by+30+Math.random()*110;
-    let endX,endY;
-    if(isCoin){
-      // target a random point on the coin's right-facing arc (angles -70° to +70°)
-      const ang=(Math.random()-0.5)*2.4; // radians, roughly right hemisphere
-      const r=coinR+plateThick;
-      endX=cx+Math.cos(ang)*r;
-      endY=coinCy+Math.sin(ang)*r;
-    } else {
-      endX=cx+10;
-      endY=by+26+Math.random()*84;
-    }
-    st.parts.push({type,x:startX,y:startY,tx:endX,ty:endY,age:0,life:1.4+Math.random()*0.8,landed:false,isCoin});
-  } else {
-    st.parts.push({type,x:ax,y:by+20,prog:0,age:0,life:1});
-  }
-}
-function updParts(t,dt){
-  const st=ST[t];const c=CVS[t];
-  const cx=c.width/2-65,by=70;
-  const coinCy=by+68,coinR=30;
-  st.parts=st.parts.filter(q=>{
-    q.age+=dt;
-    if(q.type==='dep'&&!q.landed){
-      const f=q.age/q.life;
-      if(f>=0.92){
-        q.landed=true;
-        const p=getP(t);const sm=SOL[p.solution];
-        const ionKey=sm?sm.metal:null;
-        const ionD=ionKey?ERED[ionKey]:null;
-        const col=ionD?ionD.color:'#aaa';
-        let dotX,dotY;
-        if(q.isCoin){
-          // Place atom on the coin ring surface
-          const plateThick=Math.min(st.cm*600,14);
-          const ang=Math.atan2(q.ty-coinCy,q.tx-cx);
-          const r=coinR+plateThick*(0.5+Math.random()*0.5);
-          dotX=cx+Math.cos(ang)*r+(Math.random()-.5)*3;
-          dotY=coinCy+Math.sin(ang)*r+(Math.random()-.5)*3;
-        } else {
-          dotX=cx+8+Math.random()*6;
-          dotY=q.ty+(Math.random()-.5)*6;
-        }
-        st.atoms.push({x:dotX,y:dotY,col,r:2.2+Math.random()*1.2,flash:1.0});
-        if(st.atoms.length>280)st.atoms.shift();
-      }
-    }
-    return q.age<q.life;
-  });
-  st.atoms.forEach(a=>{if(a.flash>0)a.flash=Math.max(0,a.flash-dt*3);});
-}
-
-// ══ DRAW ══════════════════════════════════════════════════════════════════════
-function draw(t){
-  const ctx=CTX[t],cv=CVS[t],st=ST[t],p=getP(t);
-  const W=cv.width,H=cv.height;
-  ctx.clearRect(0,0,W,H);
-  const bx=W/2,by=70,bw=200,bh=163;
-  const cx_=W/2-65,ax_=W/2+65,wy=50;
-  const sm=SOL[p.solution];
-  const {cr,cur}=rate(t);
-  const dep=cr>0&&st.running;
-  const info=t==='g'?calcEcell(t):{ecell:null,spont:null};
-
-  // Beaker
-  ctx.strokeStyle='#555';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(bx-bw/2,by);ctx.lineTo(bx-bw/2,by+bh);ctx.lineTo(bx+bw/2,by+bh);ctx.lineTo(bx+bw/2,by);ctx.stroke();
-
-  // Solution
-  const alpha=(0.1+st.ic*.2).toFixed(2);
-  const fills={cuso4:`rgba(30,80,200,${alpha})`,znso4:`rgba(80,160,200,${alpha})`,feso4:`rgba(140,100,40,${alpha})`,agno3:`rgba(200,200,200,${alpha})`,aucl4:`rgba(180,140,20,${alpha})`,niso4:`rgba(60,180,60,${alpha})`,pbno3:`rgba(130,130,170,${alpha})`,snso4:`rgba(150,180,180,${alpha})`,nacl:`rgba(80,120,160,${alpha})`,h2so4:`rgba(200,200,240,${alpha})`,water:`rgba(50,90,130,${alpha})`};
-  ctx.fillStyle=fills[p.solution]||`rgba(80,120,160,${alpha})`;
-  ctx.fillRect(bx-bw/2+2,by+17,bw-4,bh-19);
-  ctx.fillStyle='#8a8070';ctx.font='11px JetBrains Mono,monospace';ctx.textAlign='center';
-  ctx.fillText(sm?sm.name:'',bx,by+bh-8);
-  if(st.ic<0.98){
-    ctx.fillStyle='#c9a84c88';ctx.fillText(`ion conc: ${(st.ic*100).toFixed(0)}%`,bx,by+bh-21);
-  }
-
-  // ── CATHODE ──────────────────────────────────────────────────────────────────
-  const cc_=eCol(p.cathode);
-  const isCoin=['basemetal','washer','key','spoon'].includes(p.cathode);
-  const coinCy=by+68; // vertical center of coin inside beaker
-  const coinR=30;    // base radius
-  const plateDc=sm&&sm.metal?ERED[sm.metal]?.color||'#aaa':'#aaa';
-  const plateThick=Math.min(st.cm*600,14); // ring grows with deposited mass
-
-  if(isCoin){
-    // Outer plating ring (deposited metal)
-    if(st.cm>0.0005){
-      ctx.beginPath();ctx.arc(cx_,coinCy,coinR+plateThick,0,Math.PI*2);
-      ctx.fillStyle=plateDc;ctx.fill();
-      // subtle shine on ring
-      ctx.beginPath();ctx.arc(cx_-4,coinCy-4,coinR+plateThick,Math.PI*1.1,Math.PI*1.7);
-      ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=3;ctx.stroke();
-    }
-    // Base metal coin body
-    ctx.beginPath();ctx.arc(cx_,coinCy,coinR,0,Math.PI*2);
-    ctx.fillStyle=cc_;ctx.fill();
-    // Coin shine
-    ctx.beginPath();ctx.arc(cx_-5,coinCy-5,coinR,Math.PI*1.1,Math.PI*1.65);
-    ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=3;ctx.stroke();
-    // Wire connects top of coin
-    // (wire already drawn from cx_,by+26 — adjust label pos only)
-    ctx.fillStyle=cc_;ctx.font='bold 11px Crimson Pro,serif';ctx.textAlign='center';ctx.fillText('CATHODE',cx_,coinCy+coinR+plateThick+16);
-    ctx.fillStyle='#888';ctx.font='10px Crimson Pro,serif';ctx.fillText('(reduction)',cx_,coinCy+coinR+plateThick+27);
-    ctx.fillStyle=cc_;ctx.fillText(eName(p.cathode),cx_,coinCy+coinR+plateThick+38);
-    if(st.cm>0.0005){
-      ctx.fillStyle=plateDc;ctx.font='10px JetBrains Mono,monospace';ctx.textAlign='center';
-      ctx.fillText(`+${(plateThick).toFixed(1)}px layer`,cx_,coinCy+coinR+plateThick+50);
-    }
-  } else {
-    // Rod/strip electrode (original rectangle style)
-    const lt=Math.min(st.cm*400,14);
-    if(st.cm>0.001){ctx.fillStyle=plateDc;ctx.fillRect(cx_-10-lt/2,by+26-lt/2,20+lt,84+lt);}
-    ctx.fillStyle=cc_;ctx.fillRect(cx_-10,by+26,20,84);
-    ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(cx_-8,by+26,4,84);
-    ctx.fillStyle=cc_;ctx.font='bold 11px Crimson Pro,serif';ctx.textAlign='center';ctx.fillText('CATHODE',cx_,by+124);
-    ctx.fillStyle='#888';ctx.font='10px Crimson Pro,serif';ctx.fillText('(reduction)',cx_,by+135);
-    ctx.fillStyle=cc_;ctx.fillText(eName(p.cathode),cx_,by+147);
-  }
-
-  // ── ANODE ─────────────────────────────────────────────────────────────────
-  const ac_=eCol(p.anode);
-  const ANODE_INIT=10; // grams
-  const anodeMass=Math.max(0,ANODE_INIT+st.am); // st.am is negative as it dissolves
-  const anodeFrac=anodeMass/ANODE_INIT; // 1.0 → 0.0
-  const anodeFullH=84;
-  const anodeH=Math.max(4,anodeFullH*anodeFrac);
-  const anodeTopOffset=(anodeFullH-anodeH); // shrinks from top
-  ctx.fillStyle=ac_;ctx.fillRect(ax_-10,by+26+anodeTopOffset,20,anodeH);
-  ctx.fillStyle='rgba(255,255,255,.1)';ctx.fillRect(ax_-8,by+26+anodeTopOffset,4,anodeH);
-  ctx.fillStyle=ac_;ctx.font='bold 11px Crimson Pro,serif';ctx.textAlign='center';ctx.fillText('ANODE',ax_,by+124);
-  ctx.fillStyle='#888';ctx.font='10px Crimson Pro,serif';ctx.fillText('(oxidation)',ax_,by+135);
-  ctx.fillStyle=ac_;ctx.fillText(eName(p.anode),ax_,by+147);
-  // Show remaining mass label under anode
-  if(p.anode==='gold'||st.am<-0.001){
-    ctx.fillStyle=anodeFrac<0.2?'#c44':'#8a8070';
-    ctx.font='10px JetBrains Mono,monospace';ctx.textAlign='center';
-    ctx.fillText(`${anodeMass.toFixed(3)}g left`,ax_,by+159);
-  }
-
-  // Wires — cathode wire connects to top of coin or top of rod
-  const cwireY=isCoin?coinCy-(coinR+plateThick):by+26;
-  const wc=cur>0&&st.running?'#c9a84c':'#444';
-  ctx.strokeStyle=wc;ctx.lineWidth=2.5;
-  ctx.beginPath();ctx.moveTo(cx_,cwireY);ctx.lineTo(cx_,wy);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(ax_,by+26+anodeTopOffset);ctx.lineTo(ax_,wy);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(cx_,wy);ctx.lineTo(ax_,wy);ctx.stroke();
-
-  // Battery
-  const bty=wy-20;
-  ctx.fillStyle=cur>0&&st.running?'#2a2410':'#1a1814';
-  ctx.strokeStyle=cur>0&&st.running?'#c9a84c':'#444';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.roundRect(bx-28,bty,56,28,4);ctx.fill();ctx.stroke();
-  ctx.fillStyle=cur>0&&st.running?'#c9a84c':'#666';
-  ctx.font='bold 10px JetBrains Mono,monospace';ctx.textAlign='center';
-  ctx.fillText(p.voltage.toFixed(1)+'V',bx,bty+17);
-  ctx.fillStyle='#c44';ctx.font='bold 12px monospace';ctx.fillText('+',bx+20,bty+17);
-  ctx.fillStyle='#48a';ctx.fillText('−',bx-20,bty+17);
-
-  // No-current overlay
-  if(cur===0&&st.running&&p.voltage===0){
-    ctx.fillStyle='rgba(200,0,0,.1)';ctx.fillRect(bx-bw/2+2,by+17,bw-4,bh-19);
-    ctx.fillStyle='#c44';ctx.font='bold 12px Crimson Pro,serif';ctx.textAlign='center';
-    ctx.fillText('No current — nothing depositing',bx,by+bh/2+8);
-  }
-
-  // Electron arrows
-  if(cur>0&&st.running){
-    arrow(ctx,ax_-20,wy,ax_-55,wy,'#c9a84c88');
-    arrow(ctx,bx+20,wy,bx-20,wy,'#c9a84c88');
-    arrow(ctx,cx_+55,wy,cx_+20,wy,'#c9a84c88');
-    ctx.fillStyle='#c9a84c';ctx.font='11px Crimson Pro,serif';ctx.textAlign='center';ctx.fillText('e⁻',bx,wy-9);
-  }
-
-  // Ion particles
-  const ionKey=sm?sm.metal:null;
-  const ionD=ionKey?ERED[ionKey]:null;
-  const ionLabel=ionD?ionD.ion:'';
-  const ionBaseCol=ionD?ionD.ic:'rgba(150,150,150,A)';
-
-  // Deposited atoms on cathode face (persistent)
-  st.atoms.forEach(a=>{
-    const glow=a.flash>0;
-    if(glow){
-      ctx.beginPath();ctx.arc(a.x,a.y,a.r*2.5,0,Math.PI*2);
-      ctx.fillStyle=a.col.replace(')',`,${(a.flash*0.4).toFixed(2)})`).replace('rgb','rgba');
-      ctx.fill();
-    }
-    ctx.beginPath();ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
-    ctx.fillStyle=a.col;ctx.fill();
-  });
-
-  // Travelling ion particles
-  st.parts.forEach(q=>{
-    // ease-in-out so ions drift slowly then speed up near cathode
+  
+  // Labels
+  ctx.fillStyle='#8a8070';ctx.font='italic 10px Courier New, monospace';ctx.textAlign='center';ctx.fillText('Cathode',cx_,cy_+r1+18);ctx.fillText('Anode',ax_,cy_+r1+18);
+  // Wire & battery
+  ctx.strokeStyle='#c9a84c';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(cx_,cy_-r1);ctx.lineTo(cx_,40);ctx.lineTo(ax_,40);ctx.lineTo(ax_,cy_-r1);ctx.stroke();
+  if(getP(t).voltage>0){ctx.fillStyle='#c9a84c';ctx.beginPath();ctx.moveTo(cx_-8,20);ctx.lineTo(cx_+8,20);ctx.fill();ctx.fillRect(cx_-2,15,4,10);}
+  // Salt bridge
+  ctx.strokeStyle='#8a8070';ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(cx_+r1,cy_);ctx.lineTo(ax_-r1,cy_);ctx.stroke();ctx.setLineDash([]);
+  // Electron flow
+  const ions=ST[t].parts.filter(q=>q.type==='dep');const hasIons=ions.length>0;if(hasIons){arrow(ctx,cx_,40,cx_-15,80,'#8a8070');arrow(ctx,ax_,40,ax_+15,80,'#8a8070');}
+  // Draw particles
+  const sm=SOL[p.solution];const ionD=sm?.metal?ERED[sm.metal]:null;const ionKey=sm?.metal||null;const ionLabel=ionD?ionD.ion[0]:'';const ionBaseCol=`rgba(201,168,76,A)`;const dep=ST[t].running&&ions.length>0;
+  ST[t].parts.forEach(q=>{
     const f=q.age/q.life;
     if(q.type==='dep'){
       const ease=f<0.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
@@ -600,13 +251,11 @@ function draw(t){
       const y=q.y+(q.ty-q.y)*ease;
       const alpha=(q.landed?0:Math.min(1,(1-f)*2)).toFixed(2);
       const col=ionBaseCol.replace('A',alpha);
-      // Draw ion circle
       ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
-      // Glow ring
       ctx.beginPath();ctx.arc(x,y,8,0,Math.PI*2);
       ctx.strokeStyle=col.replace('rgba','rgba').replace(/,[^,]+\)$/,',0.25)');
       ctx.lineWidth=1.5;ctx.stroke();
-      if(ionLabel&&f<0.8){ctx.fillStyle=col;ctx.font='bold 9px JetBrains Mono,monospace';ctx.textAlign='center';ctx.fillText(ionLabel,x,y-10);}
+      if(ionLabel&&f<0.8){ctx.fillStyle=col;ctx.font='bold 12px Courier New, monospace';ctx.textAlign='center';ctx.fillText(ionLabel,x,y-10);}
     } else {
       const wl=ax_-cx_,ex=ax_-q.prog*wl;q.prog+=0.018;
       const a=Math.max(0,1-Math.abs(q.prog-.5)*1.5);
@@ -614,12 +263,11 @@ function draw(t){
     }
   });
 
-  // Half-reaction labels
   const rxY=by-6;
-  if(p.voltage>0||(t==='g'&&info.spont)){
+  if(p.voltage>0||(t==='g'&&getP(t).cathode)){
     if(ionD&&ionKey){
       const metal=ionKey[0].toUpperCase()+ionKey.slice(1);
-      ctx.fillStyle=dep?'#c9a84c':'#555';ctx.font='italic 11px Crimson Pro,serif';ctx.textAlign='center';
+      ctx.fillStyle=dep?'#c9a84c':'#555';ctx.font='bold 12px Courier New, monospace';ctx.textAlign='center';
       ctx.fillText(`${ionD.ion} + ${ionD.charge}e⁻ → ${metal}(s)`,cx_,rxY);
     }
     let al='';
@@ -640,16 +288,14 @@ function arrow(ctx,x1,y1,x2,y2,col){
   ctx.closePath();ctx.fill();
 }
 
-// ══ METERS ════════════════════════════════════════════════════════════════════
 function meters(t,cur=0){
   const st=ST[t];
   const el=id=>document.getElementById(id);
   el(`${t}-cur`).textContent=cur.toFixed(2);el(`${t}-cur`).className='mval'+(cur>0?' green':' dim');
 
-  // Plating rate: cr is g per sim-second; real rate = cr * speed g/s
   const {cr}=rate(t);
   const spd=getSpeed(t);
-  const realRate_gs = cr * spd; // g/s in real time
+  const realRate_gs = cr * spd;
   let rateDisplay, rateUnit;
   if(realRate_gs >= 0.001){
     rateDisplay = realRate_gs.toFixed(4);
@@ -668,7 +314,6 @@ function meters(t,cur=0){
   const anodeLabel = p2.anode==='gold' ? `${anodeMassRemaining.toFixed(3)}g` : (st.am>=0?'+':'')+st.am.toFixed(3);
   el(`${t}-am`).textContent=anodeLabel;
   el(`${t}-am`).className='mval'+(st.am<-0.001?' red':' dim');
-  // Update anode meter label dynamically
   const amLabel=document.getElementById(`${t}-am-label`);
   if(amLabel) amLabel.textContent=p2.anode==='gold'?'Anode Mass':'Anode Δmass';
   const amUnit=document.getElementById(`${t}-am-unit`);
@@ -676,7 +321,6 @@ function meters(t,cur=0){
   el(`${t}-ic`).textContent=(st.ic*100).toFixed(0)+'%';el(`${t}-ic`).className='mval'+(st.ic<0.3?' red':st.ic<0.7?' blue':' green');
 }
 
-// ══ LOG ═══════════════════════════════════════════════════════════════════════
 function logObs(t){
   const st=ST[t];const ti=Math.floor(st.t);
   if(ti===st.lastLog)return;st.lastLog=ti;
@@ -709,7 +353,6 @@ function logObs(t){
   e.appendChild(ts);e.appendChild(m);log.appendChild(e);log.scrollTop=log.scrollHeight;
 }
 
-// ══ RESET ═════════════════════════════════════════════════════════════════════
 function doReset(t){
   const st=ST[t];
   if(st.running)toggleRun(t);
@@ -719,7 +362,6 @@ function doReset(t){
   if(t==='g')ecellPanel();
 }
 
-// ══ INIT ══════════════════════════════════════════════════════════════════════
 loadSetup('A');
 gChange();
 </script>
